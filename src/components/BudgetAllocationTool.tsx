@@ -14,7 +14,7 @@ import { calculateAllocation, AllocationResult, BenchmarkInputs } from '@/lib/al
 import { showSuccess, showError } from '@/utils/toast';
 import { MadeWithDyad } from './made-with-dyad';
 import {
-  Facebook, Search, MonitorPlay, Linkedin, X, Camera, // Corrected Platform Icons: MonitorPlay for TikTok, Camera for Snapchat
+  Facebook, Search, MonitorPlay, Linkedin, X, Camera, // Platform Icons (MonitorPlay for TikTok, Camera for Snapchat)
   Megaphone, MousePointerClick, DollarSign, UserPlus // Objective Icons
 } from 'lucide-react';
 
@@ -263,7 +263,6 @@ const BudgetAllocationTool = () => {
             </Label>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
               {PLATFORMS.map(platform => {
-                const IconComponent = platformIcons[platform.internalKey];
                 const isSelected = selectedPlatforms.includes(platform.internalKey);
                 return (
                   <div
@@ -281,12 +280,6 @@ const BudgetAllocationTool = () => {
                       className="sr-only" // Hide the default checkbox visually
                     />
                     <Label htmlFor={platform.internalKey} className="flex items-center space-x-2 text-md font-medium cursor-pointer">
-                      {IconComponent && (
-                        <IconComponent
-                          className="w-6 h-6" // Fixed size for icons
-                          size={24} // Explicit size for Lucide
-                        />
-                      )}
                       <span>{platform.name}</span>
                     </Label>
                   </div>
