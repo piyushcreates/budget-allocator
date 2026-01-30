@@ -13,6 +13,29 @@ import { PLATFORMS, OBJECTIVES, PlatformKey, ObjectiveKey, BASE_WEIGHTS } from '
 import { calculateAllocation, AllocationResult, BenchmarkInputs } from '@/lib/allocationLogic';
 import { showSuccess, showError } from '@/utils/toast';
 import { MadeWithDyad } from './made-with-dyad';
+import {
+  Facebook, Search, MonitorPlay, Linkedin, X, Camera, // Platform Icons (MonitorPlay for TikTok, Camera for Snapchat)
+  Megaphone, MousePointerClick, DollarSign, UserPlus // Objective Icons
+} from 'lucide-react';
+
+// Map platform keys to Lucide icons
+const platformIcons: Record<PlatformKey, React.ElementType> = {
+  meta: Facebook,
+  google_search: Search,
+  google_display: MonitorPlay,
+  tiktok: MonitorPlay, // Using MonitorPlay as a fallback for TikTok
+  linkedin: Linkedin,
+  twitter: X,
+  snapchat: Camera, // Using Camera as a fallback for Snapchat
+};
+
+// Map objective keys to Lucide icons
+const objectiveIcons: Record<ObjectiveKey, React.ElementType> = {
+  awareness: Megaphone,
+  engagement: MousePointerClick,
+  conversions: DollarSign,
+  leads: UserPlus,
+};
 
 const BudgetAllocationTool = () => {
   const [totalBudget, setTotalBudget] = useState<number | ''>('');
@@ -174,18 +197,27 @@ const BudgetAllocationTool = () => {
               onValueChange={(value: ObjectiveKey) => setSelectedObjective(value)}
               className="flex flex-wrap gap-4 justify-center"
             >
-              {OBJECTIVES.map(objective => (
-                <div key={objective.internalKey} className="flex items-center space-x-2 p-3 bg-card rounded-lg border border-border hover:bg-secondary transition-colors">
-                  <RadioGroupItem
-                    value={objective.internalKey}
-                    id={objective.internalKey}
-                    className="text-primary focus:ring-ring"
-                  />
-                  <Label htmlFor={objective.internalKey} className="text-md font-medium text-foreground cursor-pointer">
-                    {objective.name}
-                  </Label>
-                </div>
-              ))}
+              {OBJECTIVES.map(objective => {
+                const IconComponent = objectiveIcons[objective.internalKey];
+                return (
+                  <div key={objective.internalKey} className="flex items-center space-x-2 p-3 bg-card rounded-lg border border-border hover:bg-secondary transition-colors">
+                    <RadioGroupItem
+                      value={objective.internalKey}
+                      id={objective.internalKey}
+                      className="text-primary focus:ring-ring"
+                    />
+                    <Label htmlFor={objective.internalKey} className="flex items-center space-x-2 text-md font-medium text-foreground cursor-pointer">
+                      {IconComponent && (
+                        <IconComponent
+                          className={selectedObjective === objective.internalKey ? 'text-primary' : 'text-foreground'}
+                          size={20}
+                        />
+                      )}
+                      <span>{objective.name}</span>
+                    </Label>
+                  </div>
+                );
+              })}
             </RadioGroup>
           </div>
 
@@ -195,21 +227,30 @@ const BudgetAllocationTool = () => {
               Select Platforms
             </Label>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-              {PLATFORMS.map(platform => (
-                <div key={platform.internalKey} className="flex items-center space-x-2 p-3 bg-card rounded-lg border border-border hover:bg-secondary transition-colors">
-                  <Checkbox
-                    id={platform.internalKey}
-                    checked={selectedPlatforms.includes(platform.internalKey)}
-                    onCheckedChange={(checked) =>
-                      handlePlatformChange(platform.internalKey, checked as boolean)
-                    }
-                    className="border-primary data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground focus:ring-ring"
-                  />
-                  <Label htmlFor={platform.internalKey} className="text-md font-medium text-foreground cursor-pointer">
-                    {platform.name}
-                  </Label>
-                </div>
-              ))}
+              {PLATFORMS.map(platform => {
+                const IconComponent = platformIcons[platform.internalKey];
+                return (
+                  <div key={platform.internalKey} className="flex items-center space-x-2 p-3 bg-card rounded-lg border border-border hover:bg-secondary transition-colors">
+                    <Checkbox
+                      id={platform.internalKey}
+                      checked={selectedPlatforms.includes(platform.internalKey)}
+                      onCheckedChange={(checked) =>
+                        handlePlatformChange(platform.internalKey, checked as boolean)
+                      }
+                      className="border-primary data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground focus:ring-ring"
+                    />
+                    <Label htmlFor={platform.internalKey} className="flex items-center space-x-2 text-md font-medium text-foreground cursor-pointer">
+                      {IconComponent && (
+                        <IconComponent
+                          className={selectedPlatforms.includes(platform.internalKey) ? 'text-primary' : 'text-foreground'}
+                          size={20}
+                        />
+                      )}
+                      <span>{platform.name}</span>
+                    </Label>
+                  </div>
+                );
+              })}
             </div>
           </div>
 
