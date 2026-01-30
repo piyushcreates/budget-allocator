@@ -14,7 +14,7 @@ import { calculateAllocation, AllocationResult, BenchmarkInputs } from '@/lib/al
 import { showSuccess, showError } from '@/utils/toast';
 import { MadeWithDyad } from './made-with-dyad';
 import {
-  Facebook, Search, MonitorPlay, Linkedin, X, Camera, // Platform Icons (MonitorPlay for TikTok, Camera for Snapchat)
+  Facebook, Search, MonitorPlay, Linkedin, X, Camera, // Corrected Platform Icons: MonitorPlay for TikTok, Camera for Snapchat
   Megaphone, MousePointerClick, DollarSign, UserPlus // Objective Icons
 } from 'lucide-react';
 
@@ -213,18 +213,26 @@ const BudgetAllocationTool = () => {
             >
               {OBJECTIVES.map(objective => {
                 const IconComponent = objectiveIcons[objective.internalKey];
+                const isSelected = selectedObjective === objective.internalKey;
                 return (
-                  <div key={objective.internalKey} className="flex items-center space-x-2 p-3 bg-card rounded-lg border border-border hover:bg-secondary transition-colors">
+                  <div
+                    key={objective.internalKey}
+                    className={`flex items-center space-x-2 p-3 rounded-lg border transition-colors cursor-pointer
+                                ${isSelected
+                                  ? 'bg-primary text-primary-foreground border-primary shadow-md'
+                                  : 'bg-card text-foreground border-border hover:bg-secondary'}`}
+                    onClick={() => setSelectedObjective(objective.internalKey)}
+                  >
                     <RadioGroupItem
                       value={objective.internalKey}
                       id={objective.internalKey}
-                      className="text-primary focus:ring-ring"
+                      className="sr-only" // Hide the default radio button visually
                     />
-                    <Label htmlFor={objective.internalKey} className="flex items-center space-x-2 text-md font-medium text-foreground cursor-pointer">
+                    <Label htmlFor={objective.internalKey} className="flex items-center space-x-2 text-md font-medium cursor-pointer">
                       {IconComponent && (
                         <IconComponent
-                          className={selectedObjective === objective.internalKey ? 'text-primary' : 'text-foreground'}
-                          size={20}
+                          className="w-6 h-6" // Fixed size for icons
+                          size={24} // Explicit size for Lucide
                         />
                       )}
                       <span>{objective.name}</span>
@@ -256,21 +264,27 @@ const BudgetAllocationTool = () => {
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
               {PLATFORMS.map(platform => {
                 const IconComponent = platformIcons[platform.internalKey];
+                const isSelected = selectedPlatforms.includes(platform.internalKey);
                 return (
-                  <div key={platform.internalKey} className="flex items-center space-x-2 p-3 bg-card rounded-lg border border-border hover:bg-secondary transition-colors">
+                  <div
+                    key={platform.internalKey}
+                    className={`flex items-center space-x-2 p-3 rounded-lg border transition-colors cursor-pointer
+                                ${isSelected
+                                  ? 'bg-primary text-primary-foreground border-primary shadow-md'
+                                  : 'bg-card text-foreground border-border hover:bg-secondary'}`}
+                    onClick={() => handlePlatformChange(platform.internalKey, !isSelected)}
+                  >
                     <Checkbox
                       id={platform.internalKey}
-                      checked={selectedPlatforms.includes(platform.internalKey)}
-                      onCheckedChange={(checked) =>
-                        handlePlatformChange(platform.internalKey, checked as boolean)
-                      }
-                      className="border-primary data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground focus:ring-ring"
+                      checked={isSelected}
+                      onCheckedChange={(checked) => handlePlatformChange(platform.internalKey, checked as boolean)}
+                      className="sr-only" // Hide the default checkbox visually
                     />
-                    <Label htmlFor={platform.internalKey} className="flex items-center space-x-2 text-md font-medium text-foreground cursor-pointer">
+                    <Label htmlFor={platform.internalKey} className="flex items-center space-x-2 text-md font-medium cursor-pointer">
                       {IconComponent && (
                         <IconComponent
-                          className={selectedPlatforms.includes(platform.internalKey) ? 'text-primary' : 'text-foreground'}
-                          size={20}
+                          className="w-6 h-6" // Fixed size for icons
+                          size={24} // Explicit size for Lucide
                         />
                       )}
                       <span>{platform.name}</span>
