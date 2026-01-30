@@ -180,7 +180,7 @@ const BudgetAllocationTool = () => {
               <li>Enter your total ad budget.</li>
               <li>Select your campaign objective.</li>
               <li>Choose the platforms you want to use.</li>
-              <li>Toggle "Use Full Funnel" for a fixed funnel split, or "Advanced Mode" for benchmark-based allocation.</li>
+              <li>Toggle "Full Funnel" for a fixed funnel split, or "Advanced Mode" for benchmark-based allocation.</li>
               <li>Click "Calculate Allocation" to see your optimized budget distribution.</li>
             </ul>
           </Card>
@@ -209,7 +209,8 @@ const BudgetAllocationTool = () => {
             <RadioGroup
               value={selectedObjective}
               onValueChange={(value: ObjectiveKey) => setSelectedObjective(value)}
-              className="flex flex-wrap gap-4 justify-center"
+              className={`flex flex-wrap gap-4 justify-center ${isFullFunnelEnabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+              disabled={isFullFunnelEnabled} // Disable when Full Funnel is enabled
             >
               {OBJECTIVES.map(objective => {
                 const IconComponent = objectiveIcons[objective.internalKey];
@@ -217,18 +218,20 @@ const BudgetAllocationTool = () => {
                 return (
                   <div
                     key={objective.internalKey}
-                    className={`flex items-center space-x-2 p-3 rounded-lg border transition-colors cursor-pointer
-                                ${isSelected
+                    className={`flex items-center space-x-2 p-3 rounded-lg border transition-colors
+                                ${isSelected && !isFullFunnelEnabled
                                   ? 'bg-primary text-primary-foreground border-primary shadow-md'
-                                  : 'bg-card text-foreground border-border hover:bg-secondary'}`}
-                    onClick={() => setSelectedObjective(objective.internalKey)}
+                                  : 'bg-card text-foreground border-border hover:bg-secondary'}
+                                ${isFullFunnelEnabled ? 'cursor-not-allowed' : 'cursor-pointer'}`}
+                    onClick={() => !isFullFunnelEnabled && setSelectedObjective(objective.internalKey)}
                   >
                     <RadioGroupItem
                       value={objective.internalKey}
                       id={objective.internalKey}
                       className="sr-only" // Hide the default radio button visually
+                      disabled={isFullFunnelEnabled}
                     />
-                    <Label htmlFor={objective.internalKey} className="flex items-center space-x-2 text-md font-medium cursor-pointer">
+                    <Label htmlFor={objective.internalKey} className={`flex items-center space-x-2 text-md font-medium ${isFullFunnelEnabled ? 'cursor-not-allowed' : 'cursor-pointer'}`}>
                       {IconComponent && (
                         <IconComponent
                           className="w-6 h-6" // Fixed size for icons
@@ -246,7 +249,7 @@ const BudgetAllocationTool = () => {
           {/* Full Funnel Toggle */}
           <div className="flex items-center justify-between p-4 bg-card rounded-lg border border-border">
             <Label htmlFor="full-funnel-toggle" className="text-lg font-semibold text-foreground">
-              Use Full Funnel
+              Full Funnel
             </Label>
             <Switch
               id="full-funnel-toggle"
