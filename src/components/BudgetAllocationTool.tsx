@@ -133,6 +133,8 @@ const BudgetAllocationTool = () => {
   const benchmarkLabel = getBenchmarkType(selectedObjective).toUpperCase();
   const isSingleChannelSelected = selectedPlatforms.length === 1;
   const isMultiChannelSelected = selectedPlatforms.length > 1;
+  const isObjectiveForFunnelSplit = ['awareness', 'leads', 'conversions'].includes(selectedObjective);
+  const shouldShowFunnelSplit = isSingleChannelSelected && isObjectiveForFunnelSplit;
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-background p-4 sm:p-6 lg:p-8">
@@ -284,13 +286,13 @@ const BudgetAllocationTool = () => {
           {allocationResults.length > 0 && (
             <div className="mt-8 p-4 bg-card rounded-xl shadow-lg border border-border">
               <h2 className="text-2xl font-bold text-foreground mb-4 text-center">
-                {isSingleChannelSelected ? `Funnel Split for ${PLATFORMS.find(p => p.internalKey === selectedPlatforms[0])?.name}` : 'Budget Allocation Results'}
+                {shouldShowFunnelSplit ? `Funnel Split for ${PLATFORMS.find(p => p.internalKey === selectedPlatforms[0])?.name}` : 'Budget Allocation Results'}
               </h2>
               <Table className="w-full">
                 <TableHeader className="bg-secondary rounded-t-lg">
                   <TableRow className="border-b-border">
                     <TableHead className="text-left text-foreground font-semibold rounded-tl-lg">
-                      {isSingleChannelSelected ? 'Funnel Stage' : 'Platform'}
+                      {shouldShowFunnelSplit ? 'Funnel Stage' : 'Platform'}
                     </TableHead>
                     <TableHead className="text-right text-foreground font-semibold">Allocation %</TableHead>
                     <TableHead className="text-right text-foreground font-semibold rounded-tr-lg">Budget ($)</TableHead>
