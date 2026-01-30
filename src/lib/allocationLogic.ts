@@ -23,8 +23,20 @@ export const calculateAllocation = (
     return [];
   }
 
-  // --- Single-channel funnel split logic ---
+  // --- Single-channel logic ---
   if (selectedPlatforms.length === 1) {
+    // If objective is 'engagement' (Traffic), do NOT apply funnel split.
+    // Instead, allocate 100% to the single selected platform.
+    if (objective === 'engagement') {
+      const platformKey = selectedPlatforms[0];
+      return [{
+        platform: PLATFORMS.find(p => p.internalKey === platformKey)?.name || platformKey,
+        allocationPercentage: 100,
+        budget: totalBudget,
+      }];
+    }
+
+    // For other objectives (Awareness, Leads, Conversions) with a single platform, apply funnel split.
     const funnelRatios = FUNNEL_SPLIT_RATIOS[objective];
     const results: AllocationResult[] = [];
     let allocatedSum = 0;
