@@ -271,15 +271,14 @@ const BudgetAllocationTool = () => {
                                 ${isSelected
                                   ? 'bg-primary text-primary-foreground border-primary shadow-md'
                                   : 'bg-card text-foreground border-border hover:bg-secondary'}`}
-                    onClick={() => handlePlatformChange(platform.internalKey, !isSelected)}
                   >
                     <Checkbox
                       id={platform.internalKey}
                       checked={isSelected}
                       onCheckedChange={(checked) => handlePlatformChange(platform.internalKey, checked as boolean)}
-                      className="sr-only" // Hide the default checkbox visually
+                      className="border-primary data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground focus:ring-ring"
                     />
-                    <Label htmlFor={platform.internalKey} className="flex items-center space-x-2 text-md font-medium cursor-pointer">
+                    <Label htmlFor={platform.internalKey} className="text-md font-medium cursor-pointer">
                       <span>{platform.name}</span>
                     </Label>
                   </div>
