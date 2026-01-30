@@ -53,7 +53,7 @@ const BudgetAllocationTool = () => {
       return false;
     }
 
-    if (isAdvancedMode) {
+    if (isAdvancedMode && selectedPlatforms.length > 1) { // Advanced mode only applies to multi-channel
       let hasNegativeBenchmark = false;
       selectedPlatforms.forEach(platformKey => {
         const cpm = benchmarks.cpm[platformKey];
@@ -63,7 +63,7 @@ const BudgetAllocationTool = () => {
         if (
           (selectedObjective === 'awareness' && cpm !== undefined && cpm < 0) ||
           (selectedObjective === 'engagement' && cpc !== undefined && cpc < 0) ||
-          (selectedObjective === 'conversions' && cpa !== undefined && cpa < 0)
+          ((selectedObjective === 'conversions' || selectedObjective === 'leads') && cpa !== undefined && cpa < 0)
         ) {
           hasNegativeBenchmark = true;
         }
@@ -74,16 +74,18 @@ const BudgetAllocationTool = () => {
       }
     }
 
-    // Check if all effective weights are zero
-    let effectiveWeightsSum = 0;
-    selectedPlatforms.forEach(platformKey => {
-      let baseWeight = BASE_WEIGHTS[selectedObjective][platformKey];
-      effectiveWeightsSum += baseWeight;
-    });
+    // Check if all effective weights are zero for multi-channel
+    if (selectedPlatforms.length > 1) {
+      let effectiveWeightsSum = 0;
+      selectedPlatforms.forEach(platformKey => {
+        let baseWeight = BASE_WEIGHTS[selectedObjective][platformKey];
+        effectiveWeightsSum += baseWeight;
+      });
 
-    if (effectiveWeightsSum === 0) {
-      showError('Cannot allocate budget: all selected platforms have zero weight for the chosen objective.');
-      return false;
+      if (effectiveWeightsSum === 0) {
+        showError('Cannot allocate budget: all selected platforms have zero weight for the chosen objective.');
+        return false;
+      }
     }
 
     return true;
@@ -99,7 +101,7 @@ const BudgetAllocationTool = () => {
       totalBudget as number,
       selectedObjective,
       selectedPlatforms,
-      isAdvancedMode,
+      isAdvancedMode && selectedPlatforms.length > 1, // Advanced mode only for multi-channel
       benchmarks
     );
 
@@ -124,11 +126,13 @@ const BudgetAllocationTool = () => {
   const getBenchmarkType = (objective: ObjectiveKey) => {
     if (objective === 'awareness') return 'cpm';
     if (objective === 'engagement') return 'cpc';
-    if (objective === 'conversions') return 'cpa';
+    if (objective === 'conversions' || objective === 'leads') return 'cpa';
     return '';
   };
 
   const benchmarkLabel = getBenchmarkType(selectedObjective).toUpperCase();
+  const isSingleChannelSelected = selectedPlatforms.length === 1;
+  const isMultiChannelSelected = selectedPlatforms.length > 1;
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-background p-4 sm:p-6 lg:p-8">
@@ -207,21 +211,23 @@ const BudgetAllocationTool = () => {
             </div>
           </div>
 
-          {/* Advanced Mode Toggle */}
-          <div className="flex items-center justify-between p-4 bg-card rounded-lg border border-border">
-            <Label htmlFor="advanced-mode" className="text-lg font-semibold text-foreground">
-              Advanced Mode (Use Benchmarks)
-            </Label>
-            <Switch
-              id="advanced-mode"
-              checked={isAdvancedMode}
-              onCheckedChange={setIsAdvancedMode}
-              className="data-[state=checked]:bg-primary data-[state=unchecked]:bg-border"
-            />
-          </div>
+          {/* Advanced Mode Toggle (only for multi-channel) */}
+          {isMultiChannelSelected && (
+            <div className="flex items-center justify-between p-4 bg-card rounded-lg border border-border">
+              <Label htmlFor="advanced-mode" className="text-lg font-semibold text-foreground">
+                Advanced Mode (Use Benchmarks)
+              </Label>
+              <Switch
+                id="advanced-mode"
+                checked={isAdvancedMode}
+                onCheckedChange={setIsAdvancedMode}
+                className="data-[state=checked]:bg-primary data-[state=unchecked]:bg-border"
+              />
+            </div>
+          )}
 
-          {/* Advanced Mode Inputs */}
-          {isAdvancedMode && (
+          {/* Advanced Mode Inputs (only for multi-channel) */}
+          {isAdvancedMode && isMultiChannelSelected && (
             <div className="grid gap-4 p-4 bg-card rounded-lg border border-border">
               <h3 className="text-xl font-bold text-foreground text-center">
                 Expected {benchmarkLabel} per Platform
@@ -278,12 +284,14 @@ const BudgetAllocationTool = () => {
           {allocationResults.length > 0 && (
             <div className="mt-8 p-4 bg-card rounded-xl shadow-lg border border-border">
               <h2 className="text-2xl font-bold text-foreground mb-4 text-center">
-                Budget Allocation Results
+                {isSingleChannelSelected ? `Funnel Split for ${PLATFORMS.find(p => p.internalKey === selectedPlatforms[0])?.name}` : 'Budget Allocation Results'}
               </h2>
               <Table className="w-full">
                 <TableHeader className="bg-secondary rounded-t-lg">
                   <TableRow className="border-b-border">
-                    <TableHead className="text-left text-foreground font-semibold rounded-tl-lg">Platform</TableHead>
+                    <TableHead className="text-left text-foreground font-semibold rounded-tl-lg">
+                      {isSingleChannelSelected ? 'Funnel Stage' : 'Platform'}
+                    </TableHead>
                     <TableHead className="text-right text-foreground font-semibold">Allocation %</TableHead>
                     <TableHead className="text-right text-foreground font-semibold rounded-tr-lg">Budget ($)</TableHead>
                   </TableRow>

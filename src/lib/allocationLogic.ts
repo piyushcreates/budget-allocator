@@ -1,4 +1,4 @@
-import { BASE_WEIGHTS, PLATFORMS, PlatformKey, ObjectiveKey } from './constants';
+import { BASE_WEIGHTS, PLATFORMS, FUNNEL_SPLIT_RATIOS, PlatformKey, ObjectiveKey } from './constants';
 
 export interface BenchmarkInputs {
   cpm: Partial<Record<PlatformKey, number>>;
@@ -23,6 +23,44 @@ export const calculateAllocation = (
     return [];
   }
 
+  // --- Single-channel funnel split logic ---
+  if (selectedPlatforms.length === 1) {
+    const funnelRatios = FUNNEL_SPLIT_RATIOS[objective];
+    const results: AllocationResult[] = [];
+    let allocatedSum = 0;
+
+    const funnelStages = [
+      { name: 'Awareness', percentage: funnelRatios.awareness },
+      { name: 'Traffic', percentage: funnelRatios.traffic },
+      { name: 'Conversions', percentage: funnelRatios.conversions },
+    ];
+
+    funnelStages.forEach((stage, index) => {
+      const percentage = stage.percentage / 100;
+      let allocatedBudget = percentage * totalBudget;
+
+      if (index < funnelStages.length - 1) {
+        allocatedBudget = Math.round(allocatedBudget);
+      }
+
+      results.push({
+        platform: stage.name,
+        allocationPercentage: stage.percentage,
+        budget: allocatedBudget,
+      });
+      allocatedSum += allocatedBudget;
+    });
+
+    // Adjust the last stage's budget to absorb rounding differences
+    if (results.length > 0) {
+      const lastStageIndex = results.length - 1;
+      results[lastStageIndex].budget += (totalBudget - allocatedSum);
+    }
+
+    return results.sort((a, b) => b.budget - a.budget);
+  }
+
+  // --- Multi-channel allocation logic (existing logic) ---
   let platformWeights: Record<PlatformKey, number> = {};
 
   // Step 1: Filter Weights and apply advanced mode adjustments
@@ -60,6 +98,15 @@ export const calculateAllocation = (
           adjustedWeight = baseWeight * (averageBenchmark / platformBenchmarks.cpc);
         }
       } else if (objective === 'conversions' && platformBenchmarks.cpa !== undefined) {
+        selectedPlatforms.forEach(pKey => {
+          const val = benchmarks.cpa[pKey];
+          if (val !== undefined && val > 0) activeBenchmarks.push(val);
+        });
+        averageBenchmark = activeBenchmarks.length > 0 ? activeBenchmarks.reduce((sum, val) => sum + val, 0) / activeBenchmarks.length : undefined;
+        if (platformBenchmarks.cpa !== undefined && platformBenchmarks.cpa > 0 && averageBenchmark !== undefined) {
+          adjustedWeight = baseWeight * (averageBenchmark / platformBenchmarks.cpa);
+        }
+      } else if (objective === 'leads' && platformBenchmarks.cpa !== undefined) { // Added leads objective for advanced mode
         selectedPlatforms.forEach(pKey => {
           const val = benchmarks.cpa[pKey];
           if (val !== undefined && val > 0) activeBenchmarks.push(val);

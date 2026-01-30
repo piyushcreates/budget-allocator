@@ -56,3 +56,10 @@ export const BASE_WEIGHTS: Record<ObjectiveKey, Record<PlatformKey, number>> = {
     snapchat: 2,
   },
 };
+
+export const FUNNEL_SPLIT_RATIOS: Record<ObjectiveKey, { awareness: number; traffic: number; conversions: number }> = {
+  awareness: { awareness: 70, traffic: 30, conversions: 0 },
+  engagement: { awareness: 30, traffic: 50, conversions: 20 },
+  leads: { awareness: 20, traffic: 40, conversions: 40 },
+  conversions: { awareness: 10, traffic: 20, conversions: 70 },
+};
