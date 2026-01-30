@@ -247,7 +247,7 @@ const BudgetAllocationTool = () => {
           </div>
 
           {/* Full Funnel Toggle */}
-          <div className="flex items-center justify-between p-4 bg-card rounded-lg border border-border">
+          <div className="flex items-center justify-between p-4 bg-secondary/50 rounded-lg border border-border shadow-md">
             <Label htmlFor="full-funnel-toggle" className="text-lg font-semibold text-foreground">
               Full Funnel
             </Label>
