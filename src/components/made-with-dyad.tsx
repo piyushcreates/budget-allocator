@@ -2,7 +2,7 @@ export const MadeWithDyad = () => {
   return (
     <div className="p-4 text-center">
       <span
-        className="text-sm text-gray-500 dark:text-gray-400"
+        className="text-sm text-muted-foreground"
       >
         Powered by Social Masla
       </span>
