@@ -12,6 +12,7 @@ export const OBJECTIVES = [
   { internalKey: 'awareness', name: 'Awareness' },
   { internalKey: 'engagement', name: 'Traffic Engagement' },
   { internalKey: 'conversions', name: 'Conversions Sales' },
+  { internalKey: 'leads', name: 'Leads' }, // New objective added
 ];
 
 export type PlatformKey = typeof PLATFORMS[number]['internalKey'];
@@ -44,5 +45,14 @@ export const BASE_WEIGHTS: Record<ObjectiveKey, Record<PlatformKey, number>> = {
     linkedin: 15,
     twitter: 5,
     snapchat: 5,
+  },
+  leads: { // New weights for 'Leads' objective
+    meta: 30,
+    google_search: 30,
+    linkedin: 20,
+    tiktok: 10,
+    google_display: 5,
+    twitter: 3,
+    snapchat: 2,
   },
 };
