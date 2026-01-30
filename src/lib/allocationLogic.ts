@@ -12,46 +12,36 @@ export interface AllocationResult {
   budget: number;
 }
 
+// Fixed funnel split ratios for when Full Funnel is enabled
+const FIXED_FUNNEL_SPLIT_RATIOS = [
+  { name: 'Awareness', percentage: 40 },
+  { name: 'Traffic', percentage: 35 },
+  { name: 'Conversions', percentage: 25 },
+];
+
 export const calculateAllocation = (
   totalBudget: number,
   objective: ObjectiveKey,
   selectedPlatforms: PlatformKey[],
   isAdvancedMode: boolean,
-  benchmarks: BenchmarkInputs
+  benchmarks: BenchmarkInputs,
+  isFullFunnelEnabled: boolean // New parameter
 ): AllocationResult[] => {
   if (totalBudget <= 0 || selectedPlatforms.length === 0) {
     return [];
   }
 
-  // --- Single-channel logic ---
-  if (selectedPlatforms.length === 1) {
-    // If objective is 'engagement' (Traffic), do NOT apply funnel split.
-    // Instead, allocate 100% to the single selected platform.
-    if (objective === 'engagement') {
-      const platformKey = selectedPlatforms[0];
-      return [{
-        platform: PLATFORMS.find(p => p.internalKey === platformKey)?.name || platformKey,
-        allocationPercentage: 100,
-        budget: totalBudget,
-      }];
-    }
-
-    // For other objectives (Awareness, Leads, Conversions) with a single platform, apply funnel split.
-    const funnelRatios = FUNNEL_SPLIT_RATIOS[objective];
+  // Rule B: If Full Funnel is ON, apply fixed funnel split
+  if (isFullFunnelEnabled) {
     const results: AllocationResult[] = [];
     let allocatedSum = 0;
 
-    const funnelStages = [
-      { name: 'Awareness', percentage: funnelRatios.awareness },
-      { name: 'Traffic', percentage: funnelRatios.traffic },
-      { name: 'Conversions', percentage: funnelRatios.conversions },
-    ];
-
-    funnelStages.forEach((stage, index) => {
+    FIXED_FUNNEL_SPLIT_RATIOS.forEach((stage, index) => {
       const percentage = stage.percentage / 100;
       let allocatedBudget = percentage * totalBudget;
 
-      if (index < funnelStages.length - 1) {
+      // Round all but the last stage to ensure total budget is exact
+      if (index < FIXED_FUNNEL_SPLIT_RATIOS.length - 1) {
         allocatedBudget = Math.round(allocatedBudget);
       }
 
@@ -72,7 +62,20 @@ export const calculateAllocation = (
     return results.sort((a, b) => b.budget - a.budget);
   }
 
-  // --- Multi-channel allocation logic (existing logic) ---
+  // Rule A: If Full Funnel is OFF, allocate 100% budget to selected objective/platforms
+  // This means no funnel split table should be shown, only channel allocation.
+
+  // Single-channel allocation (100% to the selected platform)
+  if (selectedPlatforms.length === 1) {
+    const platformKey = selectedPlatforms[0];
+    return [{
+      platform: PLATFORMS.find(p => p.internalKey === platformKey)?.name || platformKey,
+      allocationPercentage: 100,
+      budget: totalBudget,
+    }];
+  }
+
+  // Multi-channel allocation logic (existing logic, no changes needed here for Rule A)
   let platformWeights: Record<PlatformKey, number> = {};
 
   // Step 1: Filter Weights and apply advanced mode adjustments
@@ -118,7 +121,7 @@ export const calculateAllocation = (
         if (platformBenchmarks.cpa !== undefined && platformBenchmarks.cpa > 0 && averageBenchmark !== undefined) {
           adjustedWeight = baseWeight * (averageBenchmark / platformBenchmarks.cpa);
         }
-      } else if (objective === 'leads' && platformBenchmarks.cpa !== undefined) { // Added leads objective for advanced mode
+      } else if (objective === 'leads' && platformBenchmarks.cpa !== undefined) {
         selectedPlatforms.forEach(pKey => {
           const val = benchmarks.cpa[pKey];
           if (val !== undefined && val > 0) activeBenchmarks.push(val);

@@ -42,6 +42,7 @@ const BudgetAllocationTool = () => {
   const [selectedObjective, setSelectedObjective] = useState<ObjectiveKey>('awareness');
   const [selectedPlatforms, setSelectedPlatforms] = useState<PlatformKey[]>([]);
   const [isAdvancedMode, setIsAdvancedMode] = useState(false);
+  const [isFullFunnelEnabled, setIsFullFunnelEnabled] = useState(false); // New state for Full Funnel Toggle
   const [benchmarks, setBenchmarks] = useState<BenchmarkInputs>({ cpm: {}, cpc: {}, cpa: {} });
   const [allocationResults, setAllocationResults] = useState<AllocationResult[]>([]);
 
@@ -76,7 +77,8 @@ const BudgetAllocationTool = () => {
       return false;
     }
 
-    if (isAdvancedMode && selectedPlatforms.length > 1) { // Advanced mode only applies to multi-channel
+    // Advanced mode validation only applies if Full Funnel is OFF and multiple channels are selected
+    if (!isFullFunnelEnabled && isAdvancedMode && selectedPlatforms.length > 1) {
       let hasNegativeBenchmark = false;
       selectedPlatforms.forEach(platformKey => {
         const cpm = benchmarks.cpm[platformKey];
@@ -97,8 +99,8 @@ const BudgetAllocationTool = () => {
       }
     }
 
-    // Check if all effective weights are zero for multi-channel
-    if (selectedPlatforms.length > 1) {
+    // Check if all effective weights are zero for multi-channel when Full Funnel is OFF
+    if (!isFullFunnelEnabled && selectedPlatforms.length > 1) {
       let effectiveWeightsSum = 0;
       selectedPlatforms.forEach(platformKey => {
         let baseWeight = BASE_WEIGHTS[selectedObjective][platformKey];
@@ -124,8 +126,9 @@ const BudgetAllocationTool = () => {
       totalBudget as number,
       selectedObjective,
       selectedPlatforms,
-      isAdvancedMode && selectedPlatforms.length > 1, // Advanced mode only for multi-channel
-      benchmarks
+      isAdvancedMode && selectedPlatforms.length > 1, // Advanced mode only for multi-channel when Full Funnel is OFF
+      benchmarks,
+      isFullFunnelEnabled // Pass new toggle state
     );
 
     if (results.length === 0) {
@@ -141,6 +144,7 @@ const BudgetAllocationTool = () => {
     setSelectedObjective('awareness');
     setSelectedPlatforms([]);
     setIsAdvancedMode(false);
+    setIsFullFunnelEnabled(false); // Reset Full Funnel toggle
     setBenchmarks({ cpm: {}, cpc: {}, cpa: {} });
     setAllocationResults([]);
     showSuccess('Form reset!');
@@ -154,10 +158,8 @@ const BudgetAllocationTool = () => {
   };
 
   const benchmarkLabel = getBenchmarkType(selectedObjective).toUpperCase();
-  const isSingleChannelSelected = selectedPlatforms.length === 1;
-  const isMultiChannelSelected = selectedPlatforms.length > 1;
-  const isObjectiveForFunnelSplit = ['awareness', 'leads', 'conversions'].includes(selectedObjective);
-  const shouldShowFunnelSplit = isSingleChannelSelected && isObjectiveForFunnelSplit;
+  // The funnel split table is now shown ONLY if isFullFunnelEnabled is true
+  const shouldShowFunnelSplitTable = isFullFunnelEnabled;
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-background p-4 sm:p-6 lg:p-8">
@@ -221,6 +223,19 @@ const BudgetAllocationTool = () => {
             </RadioGroup>
           </div>
 
+          {/* Full Funnel Toggle */}
+          <div className="flex items-center justify-between p-4 bg-card rounded-lg border border-border">
+            <Label htmlFor="full-funnel-toggle" className="text-lg font-semibold text-foreground">
+              Use Full Funnel
+            </Label>
+            <Switch
+              id="full-funnel-toggle"
+              checked={isFullFunnelEnabled}
+              onCheckedChange={setIsFullFunnelEnabled}
+              className="data-[state=checked]:bg-primary data-[state=unchecked]:bg-border"
+            />
+          </div>
+
           {/* Platform Selection */}
           <div className="grid gap-2">
             <Label className="text-lg font-semibold text-foreground">
@@ -254,8 +269,8 @@ const BudgetAllocationTool = () => {
             </div>
           </div>
 
-          {/* Advanced Mode Toggle (only for multi-channel) */}
-          {isMultiChannelSelected && (
+          {/* Advanced Mode Toggle (only for multi-channel AND Full Funnel is OFF) */}
+          {!isFullFunnelEnabled && selectedPlatforms.length > 1 && (
             <div className="flex items-center justify-between p-4 bg-card rounded-lg border border-border">
               <Label htmlFor="advanced-mode" className="text-lg font-semibold text-foreground">
                 Advanced Mode (Use Benchmarks)
@@ -269,8 +284,8 @@ const BudgetAllocationTool = () => {
             </div>
           )}
 
-          {/* Advanced Mode Inputs (only for multi-channel) */}
-          {isAdvancedMode && isMultiChannelSelected && (
+          {/* Advanced Mode Inputs (only for multi-channel AND Full Funnel is OFF) */}
+          {!isFullFunnelEnabled && isAdvancedMode && selectedPlatforms.length > 1 && (
             <div className="grid gap-4 p-4 bg-card rounded-lg border border-border">
               <h3 className="text-xl font-bold text-foreground text-center">
                 Expected {benchmarkLabel} per Platform
@@ -327,13 +342,13 @@ const BudgetAllocationTool = () => {
           {allocationResults.length > 0 && (
             <div className="mt-8 p-4 bg-card rounded-xl shadow-lg border border-border">
               <h2 className="text-2xl font-bold text-foreground mb-4 text-center">
-                {shouldShowFunnelSplit ? `Funnel Split for ${PLATFORMS.find(p => p.internalKey === selectedPlatforms[0])?.name}` : 'Budget Allocation Results'}
+                {shouldShowFunnelSplitTable ? 'Full Funnel Allocation' : 'Budget Allocation Results'}
               </h2>
               <Table className="w-full">
                 <TableHeader className="bg-secondary rounded-t-lg">
                   <TableRow className="border-b-border">
                     <TableHead className="text-left text-foreground font-semibold rounded-tl-lg">
-                      {shouldShowFunnelSplit ? 'Funnel Stage' : 'Platform'}
+                      {shouldShowFunnelSplitTable ? 'Funnel Stage' : 'Platform'}
                     </TableHead>
                     <TableHead className="text-right text-foreground font-semibold">Allocation %</TableHead>
                     <TableHead className="text-right text-foreground font-semibold rounded-tr-lg">Budget ($)</TableHead>
