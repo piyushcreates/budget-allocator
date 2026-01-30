@@ -173,6 +173,18 @@ const BudgetAllocationTool = () => {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-8">
+          {/* Instructions Card */}
+          <Card className="p-4 rounded-lg border border-border bg-secondary/50 shadow-sm">
+            <CardTitle className="text-xl font-bold text-foreground mb-2">How to Use:</CardTitle>
+            <ul className="list-disc list-inside text-muted-foreground space-y-1">
+              <li>Enter your total ad budget.</li>
+              <li>Select your campaign objective.</li>
+              <li>Choose the platforms you want to use.</li>
+              <li>Toggle "Use Full Funnel" for a fixed funnel split, or "Advanced Mode" for benchmark-based allocation.</li>
+              <li>Click "Calculate Allocation" to see your optimized budget distribution.</li>
+            </ul>
+          </Card>
+
           {/* Total Budget Input */}
           <div className="grid gap-2">
             <Label htmlFor="total-budget" className="text-lg font-semibold text-foreground">
