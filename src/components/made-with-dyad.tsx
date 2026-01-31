@@ -7,7 +7,7 @@ export const MadeWithDyad = () => {
         rel="noopener noreferrer"
         className="text-sm text-muted-foreground hover:underline"
       >
-        Powered by Social Masla
+        Powered by <span className="text-primary">Social Masla</span>
       </a>
     </div>
   );
